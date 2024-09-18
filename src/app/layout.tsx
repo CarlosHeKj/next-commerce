@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import {Inter} from 'next/font/google';
 import Navbar from "./components/Navbar";
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import clsx from "clsx";
+const inter = Inter({subsets: ['latin']});
+
 
 export const metadata: Metadata = {
   title: "Next E-Commerce 14",
@@ -26,10 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={clsx(inter.className, 'bg-slate-700')}
       >
       <Navbar />
-      <main className="bg-slate-700 h-screen p-16">
+      <main className=" h-screen p-16">
         {children}
         </main>
       </body>
