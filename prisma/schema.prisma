@@ -14,3 +14,11 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
+model User {
+  id Int @id @default(autoincrement())
+  externalId String @unique
+  attributes Json
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
