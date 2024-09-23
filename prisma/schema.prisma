@@ -20,5 +20,6 @@ model User {
   attributes Json
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
+  stripeCustomerId String
 }
 
