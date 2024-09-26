@@ -7,7 +7,7 @@ const calculateOrderAmount = (items: ProductType[]): number => {
   return items.reduce((acc, item) => acc + (item.price! * item.quantity!), 0);
 };
 
-export async function Post(req: Request) {
+export async function POST(req: Request) {
   const { userId } = auth();
   if (!userId) {
     return new Response("Unauthorized", { status: 401 });
@@ -21,7 +21,7 @@ export async function Post(req: Request) {
     amount: total,
     currency: "brl",
     status: "pending",
-    paymentIntentId: payment_intent_id,
+    paymentIntentID: payment_intent_id,
     products: {
       create: items.map((item: ProductType) => ({
         name: item.name,
@@ -67,7 +67,7 @@ export async function Post(req: Request) {
       automatic_payment_methods: { enabled: true },
     });
 
-    orderData.paymentIntentId = paymentIntent.id;
+    orderData.paymentIntentID = paymentIntent.id;
 
     // Crie uma nova ordem no banco de dados
     const newOrder = await prisma.order.create({

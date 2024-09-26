@@ -1,5 +1,4 @@
 import prisma from "@/lib/prisma";
-import { EmailAddress } from "@clerk/nextjs/server";
 import { IncomingHttpHeaders } from "http";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -21,7 +20,7 @@ type EventDataType = {
     first_name: string;
     last_name: string;
     email_addresses: EmailAddressType[];
-    primary_email_address_id: string;
+    //primary_email_address_id: string;
     attributes: Record<string, string | number>;
 };
 type EmailAddressType = {
@@ -57,7 +56,7 @@ async function handler(request: Request){
             first_name,
             last_name,
             email_addresses,
-            primary_email_address_id,
+            //primary_email_address_id, //@typescript-eslint/no-unused-vars
             ...attributes
            } = evt.data;
 
