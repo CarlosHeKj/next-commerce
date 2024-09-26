@@ -1,6 +1,5 @@
 'use server';
 import { stripe } from "@/lib/stripe";
-import { ProductType } from "@/types/ProductType";
 
 
 export async function fetchProduct({lastProductId} :{lastProductId?: string | undefined}){
