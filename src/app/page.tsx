@@ -1,4 +1,4 @@
-import Product from "./components/Product";
+
 import { fetchProduct } from "./actions";
 import InfiniteScroll from "./components/infiniteScroll";
 
