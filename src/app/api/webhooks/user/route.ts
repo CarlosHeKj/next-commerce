@@ -13,8 +13,8 @@ type Event = {
     data: EventDataType;
     object: 'event';
     type: EventType;
-
 };
+
 type EventDataType = {
     id: string;
     first_name: string;
@@ -23,13 +23,13 @@ type EventDataType = {
     primary_email_address_id: string;
     attributes: Record<string, string | number>;
 };
+
 type EmailAddressType = {
     id: string;
     email_address: string;
 };
 
-
-async function handler(request: Request){
+async function handler(request: Request) {
     const payload = await request.json();
     const headersList = headers();
     const heads = {
@@ -37,54 +37,77 @@ async function handler(request: Request){
         'svix-timestamp': headersList.get('svix-timestamp'),
         'svix-signature': headersList.get('svix-signature'),
     };
-    const wh = new Webhook(WebhookSecret);
+    
+    if (!heads['svix-id'] || !heads['svix-timestamp'] || !heads['svix-signature']) {
+        return NextResponse.json({ error: 'Missing svix headers' }, { status: 400 });
+    }
 
+    const wh = new Webhook(WebhookSecret);
     let evt: Event | null = null;
-    try{
+
+    try {
         evt = wh.verify(
             JSON.stringify(payload),
             heads as IncomingHttpHeaders & WebhookRequiredHeaders
         ) as Event;
-        }catch(err){
-            console.error(err as Error);
-            return NextResponse.json({}, {status: 400});
-        }
-        const eventType: EventType = evt.type;
-       if(eventType === 'user.created' ||  eventType === 'user.updated'){
-           const {
+    } catch (err) {
+        console.error(err as Error);
+        return NextResponse.json({}, { status: 400 });
+    }
+
+    const eventType: EventType = evt.type;
+
+    if (eventType === 'user.created' || eventType === 'user.updated') {
+        const {
             id,
             first_name,
             last_name,
             email_addresses,
-            primary_email_address_id, 
+            primary_email_address_id,
             ...attributes
-           } = evt.data;
+        } = evt.data;
 
-           const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!,{
+        // Verifique a chave secreta do Stripe
+        const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+        if (!stripeSecretKey) {
+            throw new Error('Stripe secret key is not set');
+        }
+
+        const stripe = new Stripe(stripeSecretKey, {
             apiVersion: '2024-06-20',
-           });
+        });
 
-           const customer = await stripe.customers.create({
-            name: `${first_name} ${last_name}`,
-            email: email_addresses ? email_addresses[0].email_address : '',
-           })
+        let customer;
+        try {
+            customer = await stripe.customers.create({
+                name: `${first_name} ${last_name}`,
+                email: email_addresses ? email_addresses[0].email_address : '',
+            });
+        } catch (error) {
+            console.error('Error creating Stripe customer: ', error);
+            return NextResponse.json({ error: 'Stripe customer creation failed' }, { status: 500 });
+        }
 
-           await prisma.user.upsert({
-            where: {externalId: id as string},
-            create: {
-                externalId: id as string,
-                stripeCustomerId: customer.id,
-                attributes,
-            },
-            update:{
-                attributes
-            }
-           });
-       }
-
-       return NextResponse.json({},{status: 200});
+        try {
+            await prisma.user.upsert({
+                where: { externalId: id as string },
+                create: {
+                    externalId: id as string,
+                    stripeCustomerId: customer.id,
+                    attributes,
+                },
+                update: {
+                    attributes
+                }
+            });
+        } catch (error) {
+            console.error('Error with Prisma upsert: ', error);
+            return NextResponse.json({ error: 'Database upsert failed' }, { status: 500 });
+        }
     }
 
+    return NextResponse.json({}, { status: 200 });
+}
 
 export const GET = handler;
 export const POST = handler;
